@@ -53,6 +53,7 @@ namespace AutomationWPFTest
         {
             if (!string.IsNullOrWhiteSpace(DirTxt.Text))
             {
+                ChooseDirBtn.IsEnabled = false;
                 TestBtn.IsEnabled = false;
                 StopBtn.IsEnabled = true;
                 TestWDSwift.Client.TestNavChanged(DirTxt.Text);
@@ -68,11 +69,12 @@ namespace AutomationWPFTest
             if (StopBtn.IsEnabled)
             {
                 TestWDSwift.Client.StopTest();
+                ChooseDirBtn.IsEnabled = true;
                 TestBtn.IsEnabled = true;
                 StopBtn.IsEnabled = false;
             }
         }
-        
+
 
         /// <summary>
         /// 注册全局热键

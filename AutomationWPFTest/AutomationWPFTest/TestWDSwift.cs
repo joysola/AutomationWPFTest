@@ -16,17 +16,15 @@ namespace AutomationWPFTest
     {
         public static TestWDSwift Client { get; } = new TestWDSwift();
 
-        //public bool _isRunning { get; set; } = false;
-        //private UIA3Automation automation;
-        private readonly CancellationTokenSource _tokenSource = new CancellationTokenSource();
+        private CancellationTokenSource _tokenSource;
         public void TestNavChanged(string path)
         {
-            using var automation = new UIA3Automation();
 
             Task.Run(async () =>
             {
                 CheckStartProcess(path);
 
+                using var automation = new UIA3Automation();
 
                 var app = FlaUI.Core.Application.Launch(path);
 
@@ -48,17 +46,21 @@ namespace AutomationWPFTest
 
                 try
                 {
+                    _tokenSource = new CancellationTokenSource();
                     await Task.Run(async () =>
                     {
-
                         while (true)
                         {
                             foreach (var verticalItem in verticalListBox.Items)
                             {
+                                _tokenSource.Token.ThrowIfCancellationRequested(); // cancel
+
                                 verticalItem.Click(true);
                                 await Task.Delay(500);
                                 foreach (var horizontalItem in horizontalListBox.Items)
                                 {
+                                    _tokenSource.Token.ThrowIfCancellationRequested(); // cancel
+
                                     horizontalItem.Click(true);
                                     await Task.Delay(500);
                                 }
@@ -68,18 +70,16 @@ namespace AutomationWPFTest
                 }
                 catch (Exception)
                 {
-                     // do nothing
+                    // do nothing
                 }
             });
-
 
         }
 
 
         public void StopTest()
         {
-            //_isRunning = false;
-            _tokenSource.Cancel();
+            _tokenSource?.Cancel();
         }
         /// <summary>
         /// 启动前检查，是否存在进程，存在则kill
