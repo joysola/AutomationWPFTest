@@ -9,20 +9,41 @@
         Title="AutomationTest"
         Topmost="False"
         WindowStartupLocation="CenterScreen"
-        Height="250"
-        Width="400">
+        Height="320"
+        Width="450">
     <Grid>
         <Grid.Resources>
             <sys:Double x:Key="defaultWidth">100</sys:Double>
         </Grid.Resources>
         <StackPanel VerticalAlignment="Center">
-            <TextBox x:Name="LoopCountTxt"
-                     Margin="20,0,20,0"
-                     IsReadOnly="True" />
-            <TextBox Text=""
-                     Margin="20,10,20,0"
-                     x:Name="DirTxt"
-                     IsReadOnly="True" />
+
+            <StackPanel Orientation="Horizontal"
+                        Margin="20,0,20,0">
+                <TextBlock Text="报错信息：" />
+                <TextBox x:Name="ErrorTxt"
+                         Width="300"
+                         TextWrapping="Wrap"
+                         Height="100"
+                         IsReadOnly="True" />
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal"
+                        Margin="20,10,20,0">
+                <TextBlock Text="循环次数：" />
+                <TextBox x:Name="LoopCountTxt"
+                         Width="300"
+                         IsReadOnly="True" />
+            </StackPanel>
+            
+            <StackPanel Orientation="Horizontal"
+                        Margin="20,10,20,0">
+                <TextBlock Text="程序位置：" />
+                <TextBox Text=""
+                         Width="300"
+                         x:Name="DirTxt"
+                         IsReadOnly="True" />
+            </StackPanel>
+            
             <Button Content="选择文件目录"
                     HorizontalAlignment="Center"
                     Margin="0,10,0,0"

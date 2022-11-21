@@ -1,4 +1,5 @@
-﻿using FlaUI.Core.AutomationElements;
+﻿using FlaUI.Core;
+using FlaUI.Core.AutomationElements;
 using FlaUI.UIA3;
 using System;
 using System.Collections.Generic;
@@ -9,6 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Automation;
 using System.Xml.Linq;
 
 namespace AutomationWPFTest
@@ -16,8 +18,10 @@ namespace AutomationWPFTest
     internal class TestWDSwift
     {
         public static TestWDSwift Client { get; } = new TestWDSwift();
-
+        private UIA3Automation automation;
         public Action<int> LoopAction { get; set; }
+        public Action<string> ErrorAction { get; set; }
+
 
         private CancellationTokenSource _tokenSource;
         public void TestNavChanged(string path)
@@ -26,8 +30,8 @@ namespace AutomationWPFTest
             Task.Run(async () =>
             {
                 CheckStartProcess(path);
+                automation = new UIA3Automation();
 
-                using var automation = new UIA3Automation();
 
                 var app = FlaUI.Core.Application.Launch(path);
 
@@ -39,46 +43,7 @@ namespace AutomationWPFTest
                 loginBtn.Click(true);
                 await Task.Delay(2500);
 
-                var window = app.GetMainWindow(automation);
-                Console.WriteLine(loginWindow.Title);
-                var verticalToolBar = window.FindFirstDescendant(x => x.ByClassName("VerticalToolBar"));
-                var horizontalNavigation = window.FindFirstDescendant(x => x.ByClassName("HorizontalNavigation"));
-
-                var verticalListBox = verticalToolBar.FindFirstDescendant(x => x.ByAutomationId("lbMenuControl")).AsListBox();
-                var horizontalListBox = horizontalNavigation.FindFirstDescendant(x => x.ByAutomationId("lbMenuControl")).AsListBox();
-
-                try
-                {
-                    _tokenSource = new CancellationTokenSource();
-                    await Task.Run(async () =>
-                    {
-                        int i = 0;
-                        while (true)
-                        {
-                            LoopAction?.Invoke(i);
-                            foreach (var verticalItem in verticalListBox.Items)
-                            {
-                                _tokenSource.Token.ThrowIfCancellationRequested(); // cancel
-
-                                verticalItem.Click(true);
-                                await Task.Delay(500);
-                                foreach (var horizontalItem in horizontalListBox.Items)
-                                {
-                                    _tokenSource.Token.ThrowIfCancellationRequested(); // cancel
-
-                                    horizontalItem.Click(true);
-                                    await Task.Delay(500);
-                                }
-                            }
-                            LoopAction?.Invoke(i++);
-                        }
-                    }, _tokenSource.Token);
-                }
-                catch (Exception ex)
-                {
-                    // do nothing
-                    MessageBox.Show($"出错了，问题：{ex.Message}、详细：{ex.InnerException?.Message}");
-                }
+                await MainTask(app);
             });
 
         }
@@ -86,6 +51,8 @@ namespace AutomationWPFTest
 
         public void StopTest()
         {
+            automation.Dispose();
+            automation = null;
             _tokenSource?.Cancel();
         }
         /// <summary>
@@ -104,6 +71,61 @@ namespace AutomationWPFTest
                 }
             }
         }
+
+        private async Task MainTask(FlaUI.Core.Application app)
+        {
+            var window = app.GetMainWindow(automation);
+            var verticalToolBar = window.FindFirstDescendant(x => x.ByClassName("VerticalToolBar"));
+            var horizontalNavigation = window.FindFirstDescendant(x => x.ByClassName("HorizontalNavigation"));
+
+            var verticalListBox = verticalToolBar.FindFirstDescendant(x => x.ByAutomationId("lbMenuControl")).AsListBox();
+            var horizontalListBox = horizontalNavigation.FindFirstDescendant(x => x.ByAutomationId("lbMenuControl")).AsListBox();
+
+            try
+            {
+                _tokenSource = new CancellationTokenSource();
+                await Task.Run(async () =>
+                {
+                    await LoopTask(verticalListBox, horizontalListBox);
+                }, _tokenSource.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                // do nothing
+            }
+            catch (Exception ex) // 其他报错，继续执行
+            {
+                ErrorAction?.Invoke($"{DateTime.Now:yyyyMMddHHmmss}出错，问题：{ex.Message}、详细：{ex.InnerException?.Message}");
+                await Task.Delay(500);
+                MainTask(app);
+            }
+        }
+
+        private async Task LoopTask(ListBox verticalListBox, ListBox horizontalListBox)
+        {
+            int i = 0;
+            while (true)
+            {
+                LoopAction?.Invoke(i);
+                foreach (var verticalItem in verticalListBox.Items)
+                {
+                    _tokenSource.Token.ThrowIfCancellationRequested(); // cancel
+                    verticalItem.WaitUntilClickable();
+                    verticalItem.Click(true);
+                    await Task.Delay(100);
+                    foreach (var horizontalItem in horizontalListBox.Items)
+                    {
+                        horizontalItem.WaitUntilClickable();
+                        _tokenSource.Token.ThrowIfCancellationRequested(); // cancel
+
+                        horizontalItem.Click(true);
+                        await Task.Delay(100);
+                    }
+                }
+                LoopAction?.Invoke(i++);
+            }
+        }
+
 
     }
 }

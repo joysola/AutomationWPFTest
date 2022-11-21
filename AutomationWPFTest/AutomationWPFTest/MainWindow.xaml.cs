@@ -63,6 +63,15 @@ namespace AutomationWPFTest
                         LoopCountTxt.Text = i.ToString();
                     });
                 };
+
+                TestWDSwift.Client.ErrorAction = error =>
+                {
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        ErrorTxt.Text += $"\r\n{error}";
+                    });
+                };
+
                 TestWDSwift.Client.TestNavChanged(DirTxt.Text);
             }
             else
