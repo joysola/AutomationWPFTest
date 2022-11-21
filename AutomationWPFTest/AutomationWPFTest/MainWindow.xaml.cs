@@ -56,6 +56,13 @@ namespace AutomationWPFTest
                 ChooseDirBtn.IsEnabled = false;
                 TestBtn.IsEnabled = false;
                 StopBtn.IsEnabled = true;
+                TestWDSwift.Client.LoopAction = i =>
+                {
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        LoopCountTxt.Text = i.ToString();
+                    });
+                };
                 TestWDSwift.Client.TestNavChanged(DirTxt.Text);
             }
             else
@@ -68,6 +75,7 @@ namespace AutomationWPFTest
         {
             if (StopBtn.IsEnabled)
             {
+                
                 TestWDSwift.Client.StopTest();
                 ChooseDirBtn.IsEnabled = true;
                 TestBtn.IsEnabled = true;

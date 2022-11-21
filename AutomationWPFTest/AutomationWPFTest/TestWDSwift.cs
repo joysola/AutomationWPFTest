@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Xml.Linq;
 
 namespace AutomationWPFTest
@@ -15,6 +16,8 @@ namespace AutomationWPFTest
     internal class TestWDSwift
     {
         public static TestWDSwift Client { get; } = new TestWDSwift();
+
+        public Action<int> LoopAction { get; set; }
 
         private CancellationTokenSource _tokenSource;
         public void TestNavChanged(string path)
@@ -49,8 +52,10 @@ namespace AutomationWPFTest
                     _tokenSource = new CancellationTokenSource();
                     await Task.Run(async () =>
                     {
+                        int i = 0;
                         while (true)
                         {
+                            LoopAction?.Invoke(i);
                             foreach (var verticalItem in verticalListBox.Items)
                             {
                                 _tokenSource.Token.ThrowIfCancellationRequested(); // cancel
@@ -65,12 +70,14 @@ namespace AutomationWPFTest
                                     await Task.Delay(500);
                                 }
                             }
+                            LoopAction?.Invoke(i++);
                         }
                     }, _tokenSource.Token);
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
                     // do nothing
+                    MessageBox.Show($"出错了，问题：{ex.Message}、详细：{ex.InnerException?.Message}");
                 }
             });
 

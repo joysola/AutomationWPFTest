@@ -10,15 +10,17 @@
         Topmost="False"
         WindowStartupLocation="CenterScreen"
         Height="250"
-        Width="400"
-        >
+        Width="400">
     <Grid>
         <Grid.Resources>
             <sys:Double x:Key="defaultWidth">100</sys:Double>
         </Grid.Resources>
         <StackPanel VerticalAlignment="Center">
-            <TextBox Text=""
+            <TextBox x:Name="LoopCountTxt"
                      Margin="20,0,20,0"
+                     IsReadOnly="True" />
+            <TextBox Text=""
+                     Margin="20,10,20,0"
                      x:Name="DirTxt"
                      IsReadOnly="True" />
             <Button Content="选择文件目录"
@@ -36,7 +38,7 @@
                     HorizontalAlignment="Center"
                     Margin="0,10,0,0"
                     x:Name="StopBtn"
-                    Click="StopBtn_Click"/>
+                    Click="StopBtn_Click" />
         </StackPanel>
     </Grid>
 </Window>
