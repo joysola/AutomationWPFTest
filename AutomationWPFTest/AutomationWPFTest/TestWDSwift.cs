@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Automation;
+using System.Windows.Shapes;
 using System.Xml.Linq;
 
 namespace AutomationWPFTest
@@ -18,7 +19,19 @@ namespace AutomationWPFTest
     internal class TestWDSwift
     {
         public static TestWDSwift Client { get; } = new TestWDSwift();
+        /// <summary>
+        /// 进程路径
+        /// </summary>
+        private string _processPath;
         private UIA3Automation automation;
+        /// <summary>
+        /// 垂直导航栏
+        /// </summary>
+        private ListBox verticalListBox;
+        /// <summary>
+        /// 水平导航栏
+        /// </summary>
+        private ListBox horizontalListBox;
         public Action<int> LoopAction { get; set; }
         public Action<string> ErrorAction { get; set; }
 
@@ -26,14 +39,15 @@ namespace AutomationWPFTest
         private CancellationTokenSource _tokenSource;
         public void TestNavChanged(string path)
         {
-
+            _processPath = path;
             Task.Run(async () =>
             {
                 CheckStartProcess(path);
-                automation = new UIA3Automation();
-
+                automation = new UIA3Automation()
+;
 
                 var app = FlaUI.Core.Application.Launch(path);
+
 
                 var loginWindow = app.GetMainWindow(automation);
                 Console.WriteLine(loginWindow.Title);
@@ -55,13 +69,14 @@ namespace AutomationWPFTest
             automation = null;
             _tokenSource?.Cancel();
         }
+
         /// <summary>
         /// 启动前检查，是否存在进程，存在则kill
         /// </summary>
         /// <param name="path"></param>
         public void CheckStartProcess(string path)
         {
-            var fileName = Path.GetFileNameWithoutExtension(path);
+            var fileName = System.IO.Path.GetFileNameWithoutExtension(path);
             Process[] pros = Process.GetProcessesByName(fileName);
             for (int i = 0; i < pros.Length; i++)
             {
@@ -71,22 +86,26 @@ namespace AutomationWPFTest
                 }
             }
         }
-
+        /// <summary>
+        /// 主任务
+        /// </summary>
+        /// <param name="app"></param>
+        /// <returns></returns>
         private async Task MainTask(FlaUI.Core.Application app)
         {
             var window = app.GetMainWindow(automation);
             var verticalToolBar = window.FindFirstDescendant(x => x.ByClassName("VerticalToolBar"));
             var horizontalNavigation = window.FindFirstDescendant(x => x.ByClassName("HorizontalNavigation"));
 
-            var verticalListBox = verticalToolBar.FindFirstDescendant(x => x.ByAutomationId("lbMenuControl")).AsListBox();
-            var horizontalListBox = horizontalNavigation.FindFirstDescendant(x => x.ByAutomationId("lbMenuControl")).AsListBox();
+             verticalListBox = verticalToolBar.FindFirstDescendant(x => x.ByAutomationId("lbMenuControl")).AsListBox();
+             horizontalListBox = horizontalNavigation.FindFirstDescendant(x => x.ByAutomationId("lbMenuControl")).AsListBox();
 
             try
             {
                 _tokenSource = new CancellationTokenSource();
                 await Task.Run(async () =>
                 {
-                    await LoopTask(verticalListBox, horizontalListBox);
+                    await LoopTask();
                 }, _tokenSource.Token);
             }
             catch (OperationCanceledException)
@@ -97,11 +116,16 @@ namespace AutomationWPFTest
             {
                 ErrorAction?.Invoke($"{DateTime.Now:yyyyMMddHHmmss}出错，问题：{ex.Message}、详细：{ex.InnerException?.Message}");
                 await Task.Delay(500);
-                MainTask(app);
+                await Retry();
             }
         }
-
-        private async Task LoopTask(ListBox verticalListBox, ListBox horizontalListBox)
+        /// <summary>
+        /// 循环任务
+        /// </summary>
+        /// <param name="verticalListBox"></param>
+        /// <param name="horizontalListBox"></param>
+        /// <returns></returns>
+        private async Task LoopTask()
         {
             int i = 0;
             while (true)
@@ -125,8 +149,21 @@ namespace AutomationWPFTest
                 LoopAction?.Invoke(i++);
             }
         }
-
-
+        /// <summary>
+        /// 重试
+        /// </summary>
+        /// <returns></returns>
+        private async Task Retry()
+        {
+            if (!string.IsNullOrEmpty(_processPath))
+            {
+                automation?.Dispose();
+                automation = null;
+                automation = new UIA3Automation();
+                var app = FlaUI.Core.Application.Attach(_processPath); // 再次附加到进程
+                await MainTask(app);
+            }
+        }
     }
 }
 
