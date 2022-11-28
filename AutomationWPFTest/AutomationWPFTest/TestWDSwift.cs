@@ -55,7 +55,7 @@ namespace AutomationWPFTest
                 await Task.Delay(200);
                 var loginBtn = loginWindow.FindFirstDescendant(x => x.ByText("立 即 登 录")).AsButton();
                 loginBtn.Click(true);
-                await Task.Delay(2500);
+                await Task.Delay(10000);
 
                 await MainTask(app);
             });
