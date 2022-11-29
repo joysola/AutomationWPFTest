@@ -34,7 +34,7 @@
                          Width="300"
                          IsReadOnly="True" />
             </StackPanel>
-            
+
             <StackPanel Orientation="Horizontal"
                         Margin="20,10,20,0">
                 <TextBlock Text="程序位置：" />
@@ -43,7 +43,7 @@
                          x:Name="DirTxt"
                          IsReadOnly="True" />
             </StackPanel>
-            
+
             <Button Content="选择文件目录"
                     HorizontalAlignment="Center"
                     Margin="0,10,0,0"
@@ -54,12 +54,24 @@
                     Margin="0,10,0,0"
                     x:Name="TestBtn"
                     Click="TestBtn_Click" />
-            <Button Content="停止"
-                    IsEnabled="False"
-                    HorizontalAlignment="Center"
-                    Margin="0,10,0,0"
-                    x:Name="StopBtn"
-                    Click="StopBtn_Click" />
+            <StackPanel Orientation="Horizontal"
+                        Margin="0,10,0,0"
+                        HorizontalAlignment="Center">
+                <Button Content="暂停"
+                        IsEnabled="False"
+                        x:Name="SuspendBtn"
+                        Click="SuspendBtn_Click" />
+                <TextBlock Text="(Shift+F4)"
+                           VerticalAlignment="Center" />
+                <Button Content="停止"
+                        IsEnabled="False"
+                        Margin="10,0,0,0"
+                        HorizontalAlignment="Center"
+                        x:Name="StopBtn"
+                        Click="StopBtn_Click" />
+                <TextBlock Text="(Ctrl+F4)"
+                           VerticalAlignment="Center" />
+            </StackPanel>
         </StackPanel>
     </Grid>
 </Window>

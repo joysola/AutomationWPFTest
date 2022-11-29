@@ -56,6 +56,7 @@ namespace AutomationWPFTest
                 ChooseDirBtn.IsEnabled = false;
                 TestBtn.IsEnabled = false;
                 StopBtn.IsEnabled = true;
+                SuspendBtn.IsEnabled = true;
                 TestWDSwift.Client.LoopAction = i =>
                 {
                     Application.Current.Dispatcher.Invoke(() =>
@@ -84,11 +85,12 @@ namespace AutomationWPFTest
         {
             if (StopBtn.IsEnabled)
             {
-                
+
                 TestWDSwift.Client.StopTest();
                 ChooseDirBtn.IsEnabled = true;
                 TestBtn.IsEnabled = true;
                 StopBtn.IsEnabled = false;
+                SuspendBtn.IsEnabled = false;
             }
         }
 
@@ -111,9 +113,23 @@ namespace AutomationWPFTest
             // or do it like this. both end up doing the same thing, but this is probably simpler.
             HotkeysManager.AddHotkey(ModifierKeys.Shift, Key.F4, () =>
             {
-                StopBtn_Click(null, null);
+                SuspendBtn_Click(null, null);
             });
 
+        }
+
+        private void SuspendBtn_Click(object sender, RoutedEventArgs e)
+        {
+            if (SuspendBtn.Content.ToString() == "暂停")
+            {
+                SuspendBtn.Content = "继续";
+                TestWDSwift.Client.IsSuspend = true;
+            }
+            else
+            {
+                SuspendBtn.Content = "暂停";
+                TestWDSwift.Client.IsSuspend = false;
+            }
         }
     }
 }
