@@ -158,7 +158,7 @@ namespace AutomationWPFTest
                         await InterruptTask(); // cancel
 
                         horizontalItem.Click(true);
-                        await SpecialProcessTask(verticalItem, horizontalItem, mainWindow);
+                        await SpecialProcessTask(verticalItem, horizontalItem, mainWindow); // 特殊处理
                         await Task.Delay(100);
                     }
                 }
@@ -208,6 +208,7 @@ namespace AutomationWPFTest
                                             }
                                             await InterruptTask(); // cancel
                                             editWin.WaitUntilClickable();
+                                            await Task.Delay(200);
                                             editWin.Close();
                                             break;
                                         }
