@@ -211,7 +211,7 @@ namespace AutomationWPFTest
                                             await InterruptTask(); // cancel
                                             editWin.WaitUntilClickable();
                                             //await Task.Delay(200);
-                                            winCloseBtn.Click(true);
+                                            winCloseBtn?.Click(true);
                                             //editWin.Close();
                                             break;
                                         }
