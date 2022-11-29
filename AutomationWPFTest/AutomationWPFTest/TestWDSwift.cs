@@ -206,10 +206,13 @@ namespace AutomationWPFTest
                                                 await Task.Delay(500);
                                                 editWin = window.ModalWindows?.FirstOrDefault(x => x.Name == "编辑病例").AsWindow();
                                             }
+                                            var templateCtls = TestFlaUIHelper.GetAutomationElementDirectChildren(editWin); // 获取弹窗的内部控件集合
+                                            var winCloseBtn = templateCtls?.FirstOrDefault(x => x.AutomationId == "btnClose")?.AsButton(); // 获取弹窗的关闭按钮
                                             await InterruptTask(); // cancel
                                             editWin.WaitUntilClickable();
-                                            await Task.Delay(200);
-                                            editWin.Close();
+                                            //await Task.Delay(200);
+                                            winCloseBtn.Click(true);
+                                            //editWin.Close();
                                             break;
                                         }
                                     }
