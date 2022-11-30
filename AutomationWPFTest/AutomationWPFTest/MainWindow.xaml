@@ -19,7 +19,7 @@
 
             <StackPanel Orientation="Horizontal"
                         Margin="20,0,20,0">
-                <TextBlock Text="报错信息：" />
+                <TextBlock Text="提示信息：" />
                 <TextBox x:Name="ErrorTxt"
                          Width="300"
                          TextWrapping="Wrap"
