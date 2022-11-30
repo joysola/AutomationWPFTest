@@ -69,7 +69,7 @@ namespace AutomationWPFTest
                 {
                     Application.Current.Dispatcher.Invoke(() =>
                     {
-                        ErrorTxt.Text += $"\r\n{error}";
+                        ErrorTxt.Text += $"{error}\r\n";
                     });
                 };
 
@@ -123,11 +123,13 @@ namespace AutomationWPFTest
             if (SuspendBtn.Content.ToString() == "暂停")
             {
                 SuspendBtn.Content = "继续";
+                StopBtn.IsEnabled = false;
                 TestWDSwift.Client.IsSuspend = true;
             }
             else
             {
                 SuspendBtn.Content = "暂停";
+                StopBtn.IsEnabled = true;
                 TestWDSwift.Client.IsSuspend = false;
             }
         }

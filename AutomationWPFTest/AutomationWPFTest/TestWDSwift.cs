@@ -1,6 +1,7 @@
 ﻿using FlaUI.Core;
 using FlaUI.Core.AutomationElements;
 using FlaUI.UIA3;
+using Microsoft.VisualBasic;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -17,6 +18,7 @@ namespace AutomationWPFTest
 {
     internal class TestWDSwift
     {
+        #region properties
         public static TestWDSwift Client { get; } = new TestWDSwift();
         /// <summary>
         /// 进程路径
@@ -38,12 +40,39 @@ namespace AutomationWPFTest
         /// 主窗体
         /// </summary>
         private Window mainWindow;
-        public Action<int> LoopAction { get; set; }
-        public Action<string> ErrorAction { get; set; }
+        /// <summary>
+        /// 循环次数
+        /// </summary>
+        private int _loopCount;
+        /// <summary>
+        /// 循环开始时间
+        /// </summary>
+        private DateTime _loopStartTime;
 
-        internal bool IsSuspend { get; set; }
+        private bool _isSuspend;
 
         private CancellationTokenSource _tokenSource;
+        public Action<int> LoopAction { get; set; }
+        public Action<string> ErrorAction { get; set; }
+        /// <summary>
+        /// 是否暂停
+        /// </summary>
+        internal bool IsSuspend
+        {
+            get => _isSuspend;
+            set
+            {
+                _isSuspend = value;
+                if (_isSuspend)
+                {
+                    ErrorAction?.Invoke($"暂停测试，循环时间：{TestFlaUIHelper.GetLoopTimeInfo(_loopStartTime)} ，本次循环到{_loopCount} 次。");
+                }
+            }
+        }
+
+
+        #endregion properties
+
         public void TestNavChanged(string path)
         {
             _processPath = path;
@@ -61,6 +90,7 @@ namespace AutomationWPFTest
 
                 await Task.Delay(200);
                 var loginBtn = loginWindow.FindFirstDescendant(x => x.ByText("立 即 登 录")).AsButton();
+                loginBtn.WaitUntilClickable();
                 loginBtn.Click(true);
                 //await Task.Delay(10000);
 
@@ -69,7 +99,9 @@ namespace AutomationWPFTest
 
         }
 
-
+        /// <summary>
+        /// 停止测试
+        /// </summary>
         public void StopTest()
         {
             automation.Dispose();
@@ -103,10 +135,11 @@ namespace AutomationWPFTest
             var window = app.GetMainWindow(automation);
             while (window.Name != "MainWindow") // 等待主窗体完成
             {
-                await Task.Delay(500);
+                await Task.Delay(100);
                 window = app.GetMainWindow(automation);
             }
             mainWindow = window;
+            mainWindow.WaitUntilClickable();
 
             var verticalToolBar = mainWindow.FindFirstDescendant(x => x.ByClassName("VerticalToolBar"));
             var horizontalNavigation = mainWindow.FindFirstDescendant(x => x.ByClassName("HorizontalNavigation"));
@@ -126,10 +159,12 @@ namespace AutomationWPFTest
             catch (OperationCanceledException)
             {
                 // do nothing
+                ErrorAction?.Invoke($"终止测试，循环时间：{TestFlaUIHelper.GetLoopTimeInfo(_loopStartTime)} ，本次循环到{_loopCount} 次。");
             }
             catch (Exception ex) // 其他报错，继续执行
             {
-                ErrorAction?.Invoke($"{DateTime.Now:yyyyMMddHHmmss}出错，问题：{ex.Message}、详细：{ex.InnerException?.Message}");
+                ErrorAction?.Invoke($"出现错误，循环时间：{TestFlaUIHelper.GetLoopTimeInfo(_loopStartTime)} ，本次循环到{_loopCount} 次。");
+                ErrorAction?.Invoke($"{DateTime.Now:yyyy-MM-dd HH:mm:ss}出错，问题：{ex.Message}、详细：{ex.InnerException?.Message}");
                 await Task.Delay(500);
                 await Retry();
             }
@@ -142,10 +177,11 @@ namespace AutomationWPFTest
         /// <returns></returns>
         private async Task LoopTask()
         {
-            int i = 0;
+            _loopStartTime = DateTime.Now;
+            //int i = 0;
             while (true)
             {
-                LoopAction?.Invoke(i);
+                LoopAction?.Invoke(_loopCount);
                 foreach (var verticalItem in verticalListBox.Items)
                 {
                     await InterruptTask(); // cancel
@@ -162,7 +198,7 @@ namespace AutomationWPFTest
                         await Task.Delay(100);
                     }
                 }
-                LoopAction?.Invoke(i++);
+                LoopAction?.Invoke(_loopCount++);
             }
         }
         /// <summary>
@@ -186,37 +222,7 @@ namespace AutomationWPFTest
                         switch (horizontalItemText)
                         {
                             case "玻片设置":
-                                var slideManagement = window.FindFirstDescendant(x => x.ByClassName("SlideManagement"));
-                                var dataGrid = slideManagement?.FindFirstDescendant(x => x.ByControlType(FlaUI.Core.Definitions.ControlType.DataGrid))?.AsDataGridView();
-                                foreach (var row in dataGrid.Rows)
-                                {
-                                    await InterruptTask(); // cancel
-                                    foreach (var cell in row.Cells)
-                                    {
-                                        await InterruptTask(); // cancel
-                                        var btns = TestFlaUIHelper.GetAutomationElementDirectChildren(cell);
-                                        var deleteBtn = btns?.FirstOrDefault(x => x.ControlType == FlaUI.Core.Definitions.ControlType.Button && x.Name == "编辑");
-                                        if (deleteBtn != null)
-                                        {
-                                            deleteBtn.WaitUntilClickable();
-                                            deleteBtn.Click(true);
-                                            Window editWin = null;
-                                            while (editWin == null)
-                                            {
-                                                await Task.Delay(500);
-                                                editWin = window.ModalWindows?.FirstOrDefault(x => x.Name == "编辑病例").AsWindow();
-                                            }
-                                            var templateCtls = TestFlaUIHelper.GetAutomationElementDirectChildren(editWin); // 获取弹窗的内部控件集合
-                                            var winCloseBtn = templateCtls?.FirstOrDefault(x => x.AutomationId == "btnClose")?.AsButton(); // 获取弹窗的关闭按钮
-                                            await InterruptTask(); // cancel
-                                            editWin.WaitUntilClickable();
-                                            //await Task.Delay(200);
-                                            winCloseBtn?.Click(true);
-                                            //editWin.Close();
-                                            break;
-                                        }
-                                    }
-                                }
+                                await TestModule.Client.Test_SlideManagement(window);
                                 break;
                             default:
                                 break;
@@ -248,7 +254,7 @@ namespace AutomationWPFTest
         /// 中断操作
         /// </summary>
         /// <returns></returns>
-        private async Task InterruptTask()
+        internal async Task InterruptTask()
         {
             StopTask();
             await SuspendTask();

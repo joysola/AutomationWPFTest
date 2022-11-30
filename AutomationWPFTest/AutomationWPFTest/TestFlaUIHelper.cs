@@ -5,6 +5,9 @@ using System.Text;
 
 namespace AutomationWPFTest
 {
+    /// <summary>
+    /// FlaUI测试帮助类
+    /// </summary>
     internal class TestFlaUIHelper
     {
         /// <summary>
@@ -28,6 +31,16 @@ namespace AutomationWPFTest
             } while (child != null);
 
             return result;
+        }
+        /// <summary>
+        /// 循环时间相关
+        /// </summary>
+        /// <param name="loopStartTime">循环开始时间</param>
+        /// <returns></returns>
+        public static string GetLoopTimeInfo(DateTime loopStartTime)
+        {
+            var timeSpan = DateTime.Now - loopStartTime;
+            return $"{timeSpan.Hours}小时{timeSpan.Minutes}分钟{timeSpan.Seconds}秒";
         }
     }
 }
